@@ -2,6 +2,8 @@
 
 #include <qdebug.h>
 #include <qsettings.h>
+#include <qstringlist.h>
+#include <qrandom.h>
 
 void saveAge(QSettings* setting, QString group, QString name, int age) {
 	setting->beginGroup(group);
@@ -37,25 +39,36 @@ int main(int argc, char* argv[])
 	QCoreApplication::setOrganizationName("voidrealms");
 	QCoreApplication::setOrganizationDomain("VoidRealms.com");
 	QCoreApplication::setApplicationName("Tester");
-	// QCoreApplication::setApplicationName("Tester2");
-	// 만약 Application의 이름을 변경하면 아래의 결과는 다르게 나온다.
 
 	QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
-
-	// Save the setting
-	//settings.setValue("test", 123);
-
-	// Read the setting back
-	//qInfo() << settings.value("test").toString();
-	//qInfo() << settings.value("test").toInt();
 
 	saveAge(&settings, "people", "Bryan", 44);
 	saveAge(&settings, "bear", "twoheart", 1);
 	saveAge(&settings, "bear", "Bryan", 2);
 
-	qInfo() << "twoheart" << getAge(&settings, "bear", "twoheart");
-	qInfo() << "Bryan" << getAge(&settings, "bear", "Bryan");
+	QStringList people;
+	people << "Bryan" << "Tammy" << "Heather" << "chris";
 
+	foreach(QString person, people) {
+		int value = QRandomGenerator::global()->bounded(100);
+		saveAge(&settings, "test", person, value);
+	}
+
+	// Ensure it saved!
+	settings.sync();
+
+	qInfo() << settings.fileName();
+	// Window의 경우 레지스트리 정보
+	// UNIX 계열의 경우 파일정보가 나타난다.
+
+	foreach(QString group, settings.childGroups()) {
+		settings.beginGroup(group);
+		qInfo() << "Group : " << group;
+		foreach(QString key, settings.childKeys()) {
+			qInfo() << "... key: " << key << " = " << settings.value(key).toString();
+		}
+		settings.endGroup();
+	}
 
 	return a.exec();
 }
